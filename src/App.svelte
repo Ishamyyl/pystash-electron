@@ -10,7 +10,7 @@
 
   $: settings_sub.next(settings);
 
-  let items;
+  let items = [];
   export function set_item_list(new_items) {
     items = new_items;
   }
@@ -36,6 +36,10 @@
       / min-content 1fr;
   }
 </style>
+
+{#each items as item}
+  <p>{item}</p>
+{/each}
 
 <button on:click={() => (show_settings_modal = true)}>Settings</button>
 
