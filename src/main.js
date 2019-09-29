@@ -1,8 +1,10 @@
 const { app, BrowserWindow } = require('electron')
 const Datastore = require('nedb')
 const fs = require('fs').promises
+const fss = require('fs')
 const https = require('https')
 const util = require('util')
+const { ipcMain } = require('electron')
 
 let mainWindow
 
@@ -21,7 +23,7 @@ function createWindow() {
     show: false
   })
 
-  mainWindow.loadFile('static/index.html')
+  mainWindow.loadFile('static/index.html');
   mainWindow.maximize()
 
   // Open the DevTools.
@@ -52,11 +54,11 @@ app.on('activate', function () {
 
 const db = {
   tabs: new Datastore({
-    filename: 'db.tabs.json',
+    filename: 'tabs.db',
     autoload: true
   }),
   items: new Datastore({
-    filename: 'db.items.json',
+    filename: 'items.db',
     autoload: true
   })
 }
@@ -74,7 +76,7 @@ https.request({
   "path": `/character-window/get-stash-items?tabs=1&league=${league}&accountName=${accountName}`,
   "headers": {
     "cache-control": "no-cache",
-    "cookie": "POESESSID=8e3956244b1dcc9ee5e5c7654c84125f;",
+    "cookie": "POESESSID=f25aa310809af9a3fd621aaade499fc0;",
   }
 }, resp => {
   const chunks = [];
@@ -94,34 +96,80 @@ db.items.ensureIndex({ fieldName: 'id', unique: true })
 db.items.ensureIndex({ fieldName: 'name' })
 
 // for each of a particular stash tab type, asynchronously call API and insert into the DB
-db.tabs.find({ type: { $in: ["NormalStash", "PremiumStash", "QuadStash"] } }, { i: 1 }, (err, docs) => {
-  Promise.all(
-    docs.map(({ i }) => {
-      return new Promise((resolve, reject) => {
-        https.request({
-          "method": "GET",
-          "hostname": "www.pathofexile.com",
-          "path": `/character-window/get-stash-items?tabIndex=${i}&league=${league}&accountName=${accountName}`,
-          "headers": {
-            "cache-control": "no-cache",
-            "cookie": "POESESSID=8e3956244b1dcc9ee5e5c7654c84125f;",
-          }
-        }, resp => {
-          const chunks = [];
-          resp.on("data", chunk => {
-            chunks.push(chunk)
-          })
-          // resp.on('error', reject)
-          resp.on("end", () => {
-            db.items.insert(JSON.parse(Buffer.concat(chunks).toString()).items)
-            resolve()
-          })
-        }).end()
-      })
-    })
-  ).then(_ => {
-    console.log('done')
-  }).catch(e => console.log('e', e))
-})
+// db.tabs.find({ type: { $in: ["NormalStash", "PremiumStash", "QuadStash"] } }, { i: 1 }, (err, docs) => {
+//   Promise.all(
+//     docs.map(({ i }) => {
+//       return new Promise((resolve, reject) => {
+//         https.request({
+//           "method": "GET",
+//           "hostname": "www.pathofexile.com",
+//           "path": `/character-window/get-stash-items?tabIndex=${i}&league=${league}&accountName=${accountName}`,
+//           "headers": {
+//             "cache-control": "no-cache",
+//             "cookie": "POESESSID=f25aa310809af9a3fd621aaade499fc0;",
+//           }
+//         }, resp => {
+//           const chunks = [];
+//           resp.on("data", chunk => {
+//             chunks.push(chunk)
+//           })
+//           // resp.on('error', reject)
+//           resp.on("end", () => {
+//             db.items.insert(JSON.parse(Buffer.concat(chunks).toString()).items)
+//             resolve()
+//           })
+//         }).end()
+//       })
+//     })
+//   ).then(_ => {
+//     console.log('done')
+//   }).catch(e => console.log('e', e))
+// })
+
+// ipcMain.on('test', (event, ...args) => {
+//   console.log('e', event)
+//   console.log('a', args)
+// })
 
 db.items.persistence.compactDatafile()
+
+// function get_bytes_for_line_num(file_path, line_nums) {
+//   return fs.readFile(file_path)
+//     .then((data) => {
+//       const out = {}
+//       let n = 1
+//       for (const [i, c] of data.entries()) {
+//         if (line_nums.has(n) && !out[n]) out[n] = i
+//         if (c === 0x0a) n++
+//       }
+//       return out
+//     })
+// }
+
+// get_bytes_for_line_num('test.txt', new Set([2, 3]))
+
+// function test(event, name) {
+//   db.items.find({ name: new RegExp(name) }, (err, data) => {
+//     mainWindow.send('set_item_list', data);
+//   })
+// }
+// receive_ipc(test);
+
+// function modify_line(file_path, str, byte) {
+//   const line_bytes_mapping = get_bytes_for_line_num('test.txt', new Set([2, 3]))
+//   fs.open(file_path, 'r+').then((fh) => {
+//     fh.write(str, byte)
+//     fh.close()
+//   })
+// }
+
+
+// function update_filter_line_settings(event, options) {
+//   get_bytes_for_line_num(options.file, new Set(Object.entries(options.lines).map(([k, v]) => v.line)))
+//     .then((mapping) => {
+//       for (const [category, rule] of Object.entries(options.lines)) {
+//         modify_line(options.file, rule.show ? "Show" : "Hide", mapping[rule.line])
+//       }
+//     });
+// }
+// receive_ipc(update_filter_line_settings)
