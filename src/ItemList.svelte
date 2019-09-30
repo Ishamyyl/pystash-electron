@@ -1,6 +1,7 @@
 <script>
   import Item from "./Item.svelte";
-  export let items = [];
+
+  import { search_results as items } from "./stores.js";
 </script>
 
 <style>
@@ -15,7 +16,7 @@
 </style>
 
 <div>
-  {#each items as t}
-    <Item {...t} />
+  {#each $items as item}
+    <Item {item} />
   {/each}
 </div>

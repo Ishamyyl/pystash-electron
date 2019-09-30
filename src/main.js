@@ -35,6 +35,9 @@ function createWindow() {
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show()
+    db.items.find({ typeLine: /Vaal Regalia/ }, (err, docs) => {
+      mainWindow.send('stores.search_results.set', docs)
+    })
   })
 }
 
@@ -70,23 +73,23 @@ db.tabs.ensureIndex({ fieldName: 'type' })
 
 // fs.readFile('test.txt', { encoding: 'utf8' }).then(console.log)
 
-https.request({
-  "method": "GET",
-  "hostname": "www.pathofexile.com",
-  "path": `/character-window/get-stash-items?tabs=1&league=${league}&accountName=${accountName}`,
-  "headers": {
-    "cache-control": "no-cache",
-    "cookie": "POESESSID=f25aa310809af9a3fd621aaade499fc0;",
-  }
-}, resp => {
-  const chunks = [];
-  resp.on("data", chunk => {
-    chunks.push(chunk)
-  })
-  resp.on("end", () => {
-    db.tabs.insert(JSON.parse(Buffer.concat(chunks).toString()).tabs)
-  })
-}).end()
+// https.request({
+//   "method": "GET",
+//   "hostname": "www.pathofexile.com",
+//   "path": `/character-window/get-stash-items?tabs=1&league=${league}&accountName=${accountName}`,
+//   "headers": {
+//     "cache-control": "no-cache",
+//     "cookie": "POESESSID=f25aa310809af9a3fd621aaade499fc0;",
+//   }
+// }, resp => {
+//   const chunks = [];
+//   resp.on("data", chunk => {
+//     chunks.push(chunk)
+//   })
+//   resp.on("end", () => {
+//     db.tabs.insert(JSON.parse(Buffer.concat(chunks).toString()).tabs)
+//   })
+// }).end()
 
 db.tabs.persistence.compactDatafile()
 

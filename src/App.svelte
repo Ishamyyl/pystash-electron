@@ -2,8 +2,6 @@
   import ItemList from "./ItemList.svelte";
   import Modal from "./Modal.svelte";
 
-  import { test } from "./stores.js";
-
   let settings = { poesessid: "" };
 
   let show_settings_modal = false;
@@ -31,7 +29,7 @@
 </style>
 
 <button on:click={toggle_settings_modal}>Settings</button>
-<p>{$test.test}</p>
+<ItemList />
 
 {#if show_settings_modal}
   <Modal on:close={toggle_settings_modal}>

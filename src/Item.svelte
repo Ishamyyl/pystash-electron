@@ -1,5 +1,5 @@
 <script>
-  export let name;
+  export let item;
 </script>
 
 <style>
@@ -10,4 +10,4 @@
   }
 </style>
 
-<div>{name}</div>
+<div>{item.name}</div>

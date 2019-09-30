@@ -11,11 +11,9 @@ function persistent(key, initial) {
     return store;
 }
 
-export const test = persistent("test", "");
-ipcRenderer.on('stores.test.set', function (event, data) {
-    console.log('fromsend', event)
-    test.set(data)
+export const search_results = persistent("search_results", "");
+ipcRenderer.on('stores.search_results.set', function (event, data) {
+    search_results.set(data)
 });
-console.log('on');
 
 export default persistent;
